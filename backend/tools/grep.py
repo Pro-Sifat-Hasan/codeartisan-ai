@@ -1,9 +1,10 @@
 from pathlib import Path
 import re
 from typing import List, Dict, Union, Iterable
+from langchain_core.tools import tool # type: ignore
 
 
-
+@tool
 def grep(
     pattern: str,
     *,

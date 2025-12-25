@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Dict, Union
+from langchain_core.tools import tool # type: ignore
 
+@tool
 def edit_and_reapply(
         file_path: str,
         start_line: int,

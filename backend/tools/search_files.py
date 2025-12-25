@@ -1,7 +1,9 @@
 from pathlib import Path
 from difflib import SequenceMatcher
 from typing import List, Dict
+from langchain_core.tools import tool # type: ignore
 
+@tool
 def search_files(
     root_path: str,
     query: str,

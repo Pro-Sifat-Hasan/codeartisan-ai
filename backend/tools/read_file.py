@@ -1,5 +1,7 @@
 from pathlib import Path
+from langchain_core.tools import tool # type: ignore
 
+@tool
 def read_file(file_path: str) -> str:
     """
     Reads the entire content of a file and returns it as a string.

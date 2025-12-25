@@ -1,7 +1,8 @@
 import subprocess
 from typing import Dict, Optional
+from langchain_core.tools import tool # type: ignore
 
-
+@tool
 def run_terminal(
     command: str,
     *,

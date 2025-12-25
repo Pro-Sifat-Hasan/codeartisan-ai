@@ -1,12 +1,13 @@
 from pathlib import Path
 from typing import Dict, List, TypedDict
-
+from langchain_core.tools import tool # type: ignore
 
 # Define a proper recursive type using TypedDict
 class DirectoryTree(TypedDict):
     files: List[str]
     directories: Dict[str, "DirectoryTree"]
 
+@tool
 def list_dir(root_path: str) -> DirectoryTree:
     """
     Reads the structure of a directory without reading file contents.

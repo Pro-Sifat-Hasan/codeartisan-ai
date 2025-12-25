@@ -1,7 +1,9 @@
 import requests  # type: ignore
 from bs4 import BeautifulSoup  # type: ignore
+from langchain_core.tools import tool # type: ignore
 
 
+@tool
 def fetch_url_content(url: str, *, timeout: int = 15) -> str:
     """
     Fetch and extract the full readable text content from a URL.

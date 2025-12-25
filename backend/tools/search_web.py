@@ -2,8 +2,9 @@ import requests  # type: ignore
 from bs4 import BeautifulSoup  # type: ignore
 from typing import List, Dict
 from urllib.parse import unquote
+from langchain_core.tools import tool # type: ignore
 
-
+@tool
 def search_web(
     query: str,
     *,

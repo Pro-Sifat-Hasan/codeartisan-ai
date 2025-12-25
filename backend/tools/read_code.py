@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Union
+from langchain_core.tools import tool # type: ignore
 
+@tool
 def read_code(file_path: Union[str, Path], start_line: int, end_line: int) -> str:
     """
     Returns the code between start_line and end_line (inclusive) from a file.
