@@ -1,31 +1,28 @@
-from typing import Annotated, TypedDict, List
-from langchain_core.messages import BaseMessage  # type: ignore
+from typing import Annotated, TypedDict, List, Dict, Any
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage  # type: ignore
 from langchain_core.tools import tool # type: ignore
 from langgraph.graph import StateGraph, START, END  # type: ignore
 from langgraph.checkpoint.memory import MemorySaver # type: ignore
-from langgraph.prebuilt import create_react_agent # type: ignore
+from langchain.agents import create_agent # type: ignore
 from langchain_google_genai import ChatGoogleGenerativeAI # type: ignore
 import os
 from dotenv import load_dotenv # type: ignore
 
 # import all tools
-from backend.tools import edit_and_reapply # type: ignore
-from backend.tools import fetch_url_content # type: ignore
-from backend.tools import grep # type: ignore
-from backend.tools import list_dir # type: ignore
-from backend.tools import read_code # type: ignore
-from backend.tools import read_file # type: ignore
-from backend.tools import search_web # type: ignore
-from backend.tools import run_terminal # type: ignore
-from backend.tools import search_files # type: ignore
+from tools.edit_and_reapply import edit_and_reapply # type: ignore
+from tools.fetch_url_content import fetch_url_content # type: ignore
+from tools.grep import grep # type: ignore
+from tools.list_dir import list_dir # type: ignore
+from tools.read_code import read_code # type: ignore
+from tools.read_file import read_file # type: ignore
+from tools.search_web import search_web # type: ignore
+from tools.terminal import run_terminal # type: ignore
+from tools.search_files import search_files # type: ignore
 
-# Load environment variables from .env file
 load_dotenv()
-
-# Set your API key
 os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY", "")
 
-# Shared state across all agents
+# Shared state
 class AgentState(TypedDict):
     messages: Annotated[List[BaseMessage], "add_messages"]
     research: str
@@ -37,7 +34,7 @@ class AgentState(TypedDict):
 llm = ChatGoogleGenerativeAI(model="gemini-3-pro-preview", temperature=0.3)
 
 # 1. Research Agent - Gathers requirements and context
-research_agent = create_react_agent(
+research_agent = create_agent(
     llm,
     tools=[search_web, read_file, grep, list_dir, fetch_url_content, search_files, read_code], 
     system_prompt="""
@@ -64,16 +61,8 @@ Output ONLY in JSON: {
     """
 )
 
-@tool
-def research_task(description: str) -> str:
-    """Research coding requirements and context."""
-    result = research_agent.invoke({
-        "messages": [{"role": "user", "content": f"Research: {description}"}]
-    })
-    return result["messages"][-1].content
-
 # 2. Architect Agent - Designs system structure
-architect_agent = create_react_agent(
+architect_agent = create_agent(
     llm,
     tools=[search_files, list_dir, read_file, grep, fetch_url_content, read_code],
     system_prompt="""
@@ -100,16 +89,8 @@ Output ONLY in JSON: {
     """
 )
 
-@tool
-def architect_task(requirements: str) -> str:
-    """Design software architecture and file structure."""
-    result = architect_agent.invoke({
-        "messages": [{"role": "user", "content": f"Architecture for: {requirements}"}]
-    })
-    return result["messages"][-1].content
-
 # 3. Code Writer Agent (Cursor-like) - Generates complete code
-code_writer_agent = create_react_agent(
+code_writer_agent = create_agent(
     llm,
     tools=[edit_and_reapply, read_file, read_code, list_dir, grep, search_files, run_terminal], 
     system_prompt="""
@@ -135,16 +116,8 @@ Output ONLY formatted code blocks in JSON: {
     """
 )
 
-@tool
-def write_code(spec: str) -> str:
-    """Write complete, production-ready code from architecture spec."""
-    result = code_writer_agent.invoke({
-        "messages": [{"role": "user", "content": f"Write code for: {spec}"}]
-    })
-    return result["messages"][-1].content
-
 # 4. Reviewer Agent - Code review and improvements
-reviewer_agent = create_react_agent(
+reviewer_agent = create_agent(
     llm,
     tools=[search_files, search_web, fetch_url_content, grep, list_dir, read_file, read_code],
     system_prompt="""
@@ -171,16 +144,8 @@ Output ONLY in JSON: {
     """
 )
 
-@tool
-def review_code(code: str) -> str:
-    """Review code and suggest improvements."""
-    result = reviewer_agent.invoke({
-        "messages": [{"role": "user", "content": f"Review this code:\n{code}"}]
-    })
-    return result["messages"][-1].content
-
 # 5. Tester Agent - Generates and runs tests
-tester_agent = create_react_agent(
+tester_agent = create_agent(
     llm,
     tools=[run_terminal, grep, list_dir, read_file, read_code],  
     system_prompt="""
@@ -207,18 +172,51 @@ Output ONLY in JSON: {
     """
 )
 
+# Research Agent Node
+@tool
+def research_task(description: str) -> str:
+    """Research coding requirements and context."""
+    messages = [HumanMessage(content=f"Research: {description}")]
+    result = llm.invoke(messages)
+    return result.content
+
+# Architect Agent Node  
+@tool
+def architect_task(requirements: str) -> str:
+    """Design software architecture and file structure."""
+    messages = [HumanMessage(content=f"Architecture for: {requirements}")]
+    result = llm.invoke(messages)
+    return result.content
+
+# Code Writer Agent Node
+@tool
+def write_code(spec: str) -> str:
+    """Write complete, production-ready code from architecture spec."""
+    messages = [HumanMessage(content=f"Write code for: {spec}")]
+    result = llm.invoke(messages)
+    return result.content
+
+# Reviewer Agent Node
+@tool
+def review_code(code: str) -> str:
+    """Review code and suggest improvements."""
+    messages = [HumanMessage(content=f"Review this code:\n{code}")]
+    result = llm.invoke(messages)
+    return result.content
+
+# Tester Agent Node
 @tool
 def test_code(code: str) -> str:
     """Write tests and validate code."""
-    result = tester_agent.invoke({
-        "messages": [{"role": "user", "content": f"Test this code:\n{code}"}]
-    })
-    return result["messages"][-1].content
+    messages = [HumanMessage(content=f"Test this code:\n{code}")]
+    result = llm.invoke(messages)
+    return result.content
 
-# Supervisor sees all agents as high-level tools
+# Supervisor LLM with all agent tools
 supervisor_tools = [research_task, architect_task, write_code, review_code, test_code]
+llm_with_tools = llm.bind_tools(supervisor_tools)
 
-supervisor = create_react_agent(
+supervisor = create_agent(
     llm,
     tools=supervisor_tools,
     system_prompt="""
@@ -248,13 +246,59 @@ Output ONLY in JSON: {
     """
 )
 
-# Compile the full multi-agent graph
+def supervisor_node(state: AgentState) -> Dict[str, Any]:
+    """Supervisor decides which agents to call."""
+    messages = state["messages"]
+    last_message = messages[-1].content
+    
+    # Bind tools and invoke
+    result = llm_with_tools.invoke(messages + [HumanMessage(content=last_message)])
+    
+    # Handle tool calls
+    if result.tool_calls:
+        tool_messages = []
+        for tool_call in result.tool_calls:
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
+            
+            # Find and execute tool
+            for t in supervisor_tools:
+                if t.name == tool_name:
+                    tool_result = t.invoke(tool_args)
+                    tool_messages.append(ToolMessage(
+                        content=tool_result,
+                        tool_call_id=tool_call["id"]
+                    ))
+                    break
+        
+        return {
+            "messages": [result] + tool_messages,
+            **{k: v for k, v in state.items() if k != "messages"}  # Preserve other state
+        }
+    else:
+        return {"messages": [result]}
+
+# Build graph
 checkpointer = MemorySaver()
 graph = StateGraph(AgentState)
-graph.add_node("supervisor", lambda state: supervisor.invoke(state))
+
+graph.add_node("supervisor", supervisor_node)
 graph.add_edge(START, "supervisor")
-graph.add_conditional_edges(
-    "supervisor",
-    lambda state: END if not state["messages"][-1].tool_calls else "supervisor"
-)
+
+# Loop until no more tool calls
+def should_continue(state: AgentState):
+    last_message = state["messages"][-1]
+    return "supervisor" if isinstance(last_message, AIMessage) and last_message.tool_calls else END
+
+graph.add_conditional_edges("supervisor", should_continue)
+
 app = graph.compile(checkpointer=checkpointer)
+
+# Test
+config = {"configurable": {"thread_id": "1"}}
+result = app.invoke(
+    {"messages": [HumanMessage(content="Build a simple Flask API")]}, 
+    config
+)
+
+print(result["messages"][-1].content)
