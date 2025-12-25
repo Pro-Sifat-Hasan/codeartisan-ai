@@ -39,7 +39,7 @@ llm = ChatGoogleGenerativeAI(model="gemini-3-pro-preview", temperature=0.3)
 # 1. Research Agent - Gathers requirements and context
 research_agent = create_react_agent(
     llm,
-    tools=[search_web, read_file, grep, list_dir, fetch_url_content, search_files, read_code],  # Add web search, documentation fetch tools
+    tools=[search_web, read_file, grep, list_dir, fetch_url_content, search_files, read_code], 
     system_prompt="""
     You are the Researcher Artisan, a scholarly detective uncovering the gems of coding knowledge for CodeArtisan AI. Your craft: Gather precise, up-to-date requirements, libraries, trends, and contexts to fuel flawless projects.
 
@@ -75,7 +75,7 @@ def research_task(description: str) -> str:
 # 2. Architect Agent - Designs system structure
 architect_agent = create_react_agent(
     llm,
-    tools=[search_files, list_dir, read_file, grep, fetch_url_content, read_code],  # Add diagram tools, architecture validators
+    tools=[search_files, list_dir, read_file, grep, fetch_url_content, read_code],
     system_prompt="""
     You are the Architect Artisan, the visionary blueprint master shaping robust structures in CodeArtisan AI. Your art: Design scalable architectures, file hierarchies, APIs, and data flows from requirements.
 
@@ -111,7 +111,7 @@ def architect_task(requirements: str) -> str:
 # 3. Code Writer Agent (Cursor-like) - Generates complete code
 code_writer_agent = create_react_agent(
     llm,
-    tools=[edit_and_reapply, read_file, read_code, list_dir, grep, search_files, run_terminal],  # Add file I/O, git tools for Cursor-like behavior
+    tools=[edit_and_reapply, read_file, read_code, list_dir, grep, search_files, run_terminal], 
     system_prompt="""
     You are the CodeWriter Artisan, a virtuoso coder forging elegant, complete code in CodeArtisan AI—like Cursor but with deeper insight and autonomy. Your masterpiece: Generate FULL production code, including imports, error handling, comments, and inline tests.
 
@@ -146,7 +146,7 @@ def write_code(spec: str) -> str:
 # 4. Reviewer Agent - Code review and improvements
 reviewer_agent = create_react_agent(
     llm,
-    tools=[search_files, search_web, fetch_url_content, grep, list_dir, read_file, read_code],  # Add linting, security scanning tools
+    tools=[search_files, search_web, fetch_url_content, grep, list_dir, read_file, read_code],
     system_prompt="""
     You are the Reviewer Artisan, the vigilant guardian polishing code to perfection in CodeArtisan AI. Your scrutiny: Detect bugs, inefficiencies, style issues, and suggest masterful refinements.
 
@@ -182,7 +182,7 @@ def review_code(code: str) -> str:
 # 5. Tester Agent - Generates and runs tests
 tester_agent = create_react_agent(
     llm,
-    tools=[run_terminal, grep, list_dir, read_file, read_code],  # Add test runners, coverage tools
+    tools=[run_terminal, grep, list_dir, read_file, read_code],  
     system_prompt="""
     You are the Tester Artisan, the unbreakable forge testing code's mettle in CodeArtisan AI. Your trial: Craft comprehensive tests, run validations, and ensure rock-solid functionality.
 
