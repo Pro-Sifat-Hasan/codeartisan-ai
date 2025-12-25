@@ -6,18 +6,18 @@ from langgraph.checkpoint.memory import MemorySaver # type: ignore
 from langgraph.prebuilt import create_react_agent # type: ignore
 from langchain_google_genai import ChatGoogleGenerativeAI # type: ignore
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 # import all tools
-from backend.tools import edit_and_reapply
-from backend.tools import fetch_url_content
-from backend.tools import grep
-from backend.tools import list_dir
-from backend.tools import read_code
-from backend.tools import read_file
-from backend.tools import search_files
-from backend.tools import search_web
-from backend.tools import run_terminal 
+from backend.tools import edit_and_reapply # type: ignore
+from backend.tools import fetch_url_content # type: ignore
+from backend.tools import grep # type: ignore
+from backend.tools import list_dir # type: ignore
+from backend.tools import read_code # type: ignore
+from backend.tools import read_file # type: ignore
+from backend.tools import search_web # type: ignore
+from backend.tools import run_terminal # type: ignore
+from backend.tools import search_files # type: ignore
 
 # Load environment variables from .env file
 load_dotenv()
